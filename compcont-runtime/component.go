@@ -1,6 +1,7 @@
 package compcontrt
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -16,8 +17,8 @@ type ComponentMetadata = compcont.ComponentMetadata
 type ComponentConfig = compcont.ComponentConfig
 
 var (
-	ErrComponentNameNotFound       = compcont.ErrComponentNameNotFound
-	ErrComponentDependencyNotFound = compcont.ErrComponentDependencyNotFound
+	ErrComponentNameNotFound       = errors.New("component name not found")
+	ErrComponentDependencyNotFound = errors.New("component dependency not found")
 )
 
 type innerComponent struct {
@@ -175,7 +176,7 @@ func NewComponentContainer(optFns ...optionsFunc) (cr IComponentContainer) {
 	}
 
 	if opt.factoryRegistry == nil {
-		opt.factoryRegistry = DefaultFactoryRegistry
+		opt.factoryRegistry = compcont.DefaultFactoryRegistry
 	}
 	return &ComponentRegistry{
 		factoryRegistry: opt.factoryRegistry,

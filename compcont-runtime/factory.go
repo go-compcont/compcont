@@ -1,6 +1,7 @@
 package compcontrt
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
@@ -9,7 +10,7 @@ import (
 
 type IFactory = compcont.IFactory
 
-var ErrComponentTypeNotRegistered = compcont.ErrComponentTypeNotRegistered
+var ErrComponentTypeNotRegistered = errors.New("component type not registered")
 
 type FactoryRegistry struct {
 	factories map[ComponentType]IFactory
@@ -51,4 +52,6 @@ func (c *FactoryRegistry) GetFactory(t ComponentType) (f IFactory, err error) {
 	return
 }
 
-var DefaultFactoryRegistry = NewFactoryRegistry()
+func init() {
+	compcont.DefaultFactoryRegistry = NewFactoryRegistry()
+}

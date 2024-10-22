@@ -1,13 +1,12 @@
 package compcontrt
 
 import (
+	"errors"
 	"fmt"
 	"slices"
-
-	"github.com/go-compcont/compcont/compcont"
 )
 
-var ErrCircularDependency = compcont.ErrCircularDependency
+var ErrCircularDependency = errors.New("circular dependency detected")
 
 func topologicalSort(cfgMap map[ComponentName]ComponentConfig) ([]ComponentName, error) {
 	// 计算每个节点的入度

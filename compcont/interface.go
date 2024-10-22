@@ -4,6 +4,8 @@ type ComponentType string
 
 type ComponentName string
 
+var DefaultFactoryRegistry IFactoryRegistry = nil
+
 // 一个组件工厂
 type IFactory interface {
 	Type() ComponentType // 组件唯一类型名称

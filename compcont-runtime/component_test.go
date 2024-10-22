@@ -65,8 +65,8 @@ var factoryB = &compcont.TypedSimpleComponentFactory[ConfigB, IComponentB]{
 }
 
 func Test(t *testing.T) {
-	DefaultFactoryRegistry.Register(factoryA)
-	DefaultFactoryRegistry.Register(factoryB)
+	compcont.DefaultFactoryRegistry.Register(factoryA)
+	compcont.DefaultFactoryRegistry.Register(factoryB)
 
 	registry := NewComponentContainer()
 	err := registry.LoadNamedComponents(map[ComponentName]ComponentConfig{
