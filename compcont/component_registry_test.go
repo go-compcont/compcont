@@ -22,7 +22,7 @@ func (a *ComponentA) GetConfigA() ConfigA { return a.ConfigA }
 
 var factoryA = &TypedSimpleComponentFactory[ConfigA, IComponentA]{
 	TypeName: "a",
-	TypedCreateComponentFunc: func(registry IComponentRegistry, config ConfigA) (component IComponentA, err error) {
+	TypedCreateComponentFunc: func(registry IComponentContainer, config ConfigA) (component IComponentA, err error) {
 		component = &ComponentA{
 			ConfigA: config,
 		}
@@ -32,7 +32,7 @@ var factoryA = &TypedSimpleComponentFactory[ConfigA, IComponentA]{
 
 type ConfigB struct {
 	TestB  string                                     `ccf:"test_b"`
-	ReferA TypedComponentConfig[ConfigA, IComponentA] `ccf:"test_a"`
+	ReferA TypedComponentConfig[ConfigA, IComponentA] `ccf:"refer_a"`
 }
 
 type IComponentB interface {
@@ -50,7 +50,7 @@ func (a *ComponentB) GetConfigB() ConfigB {
 
 var factoryB = &TypedSimpleComponentFactory[ConfigB, IComponentB]{
 	TypeName: "b",
-	TypedCreateComponentFunc: func(registry IComponentRegistry, config ConfigB) (component IComponentB, err error) {
+	TypedCreateComponentFunc: func(registry IComponentContainer, config ConfigB) (component IComponentB, err error) {
 		componentA, err := config.ReferA.LoadComponent(registry)
 		if err != nil {
 			return
@@ -64,9 +64,10 @@ var factoryB = &TypedSimpleComponentFactory[ConfigB, IComponentB]{
 }
 
 func Test(t *testing.T) {
-	registry := NewComponentRegistry()
-	registry.Register(factoryA)
-	registry.Register(factoryB)
+	DefaultFactoryRegistry.Register(factoryA)
+	DefaultFactoryRegistry.Register(factoryB)
+
+	registry := NewComponentContainer()
 	err := registry.LoadNamedComponents(map[ComponentName]ComponentConfig{
 		"ca": TypedComponentConfig[ConfigA, IComponentA]{
 			Type: "a",
@@ -85,8 +86,25 @@ func Test(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
+	err = registry.LoadNamedComponents(map[ComponentName]ComponentConfig{
+		"cb1": {
+			Type: "b",
+			Deps: []ComponentName{"ca"},
+			Config: map[string]any{
+				"test_b":  "testb",
+				"refer_a": map[string]any{"refer": "ca"},
+			},
+		},
+	})
+	assert.NoError(t, err)
+
 	componentB, err := LoadComponent[IComponentB](registry, ComponentConfig{Refer: "cb"})
 	assert.NoError(t, err)
 
 	assert.Equal(t, "testb", componentB.GetConfigB().TestB)
+
+	componentB1, err := LoadComponent[IComponentB](registry, ComponentConfig{Refer: "cb1"})
+	assert.NoError(t, err)
+
+	assert.Equal(t, "testb", componentB1.GetConfigB().TestB)
 }

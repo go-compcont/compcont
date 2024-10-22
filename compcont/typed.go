@@ -5,13 +5,13 @@ import (
 	"reflect"
 )
 
-type TypedCreateComponentFunc[Config any, Component any] func(cc IComponentRegistry, config Config) (component Component, err error)
+type TypedCreateComponentFunc[Config any, Component any] func(container IComponentContainer, config Config) (component Component, err error)
 
-type TypedDestroyComponentFunc[Component any] func(cc IComponentRegistry, component Component) (err error)
+type TypedDestroyComponentFunc[Component any] func(container IComponentContainer, component Component) (err error)
 
 // 将带完整类型的组件构造函数泛化成接口通用的构造函数
 func TypedCreateComponent[Config any, Component any](typedConstructor TypedCreateComponentFunc[Config, Component]) CreateComponentFunc {
-	return func(cc IComponentRegistry, rawConfig any) (comp any, err error) {
+	return func(cc IComponentContainer, rawConfig any) (comp any, err error) {
 		switch v := rawConfig.(type) {
 		case nil:
 			var cfg Config
@@ -33,7 +33,7 @@ func TypedCreateComponent[Config any, Component any](typedConstructor TypedCreat
 }
 
 func TypedDestoryComponent[Component any](typedDestructor TypedDestroyComponentFunc[Component]) DestroyComponentFunc {
-	return func(cc IComponentRegistry, component any) (err error) {
+	return func(cc IComponentContainer, component any) (err error) {
 		if v, ok := component.(Component); ok {
 			return typedDestructor(cc, v)
 		}
@@ -43,10 +43,10 @@ func TypedDestoryComponent[Component any](typedDestructor TypedDestroyComponentF
 }
 
 type TypedComponentConfig[Config any, Component any] struct {
-	Refer  ComponentName   // 该组件引用的其他组件
-	Type   ComponentType   // 组件类型
-	Deps   []ComponentName // 构造该组件需要依赖的其他组件名称
-	Config Config          // 组件的自身配置
+	Refer  ComponentName   `json:"refer" yaml:"refer"`   // 该组件引用的其他组件
+	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
+	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
+	Config Config          `json:"config" yaml:"config"` // 组件的自身配置
 }
 
 func (c TypedComponentConfig[Config, Component]) ToComponentConfig() ComponentConfig {
@@ -58,16 +58,16 @@ func (c TypedComponentConfig[Config, Component]) ToComponentConfig() ComponentCo
 	}
 }
 
-func (c TypedComponentConfig[Config, Component]) LoadComponent(registry IComponentRegistry) (component Component, err error) {
-	return LoadComponent[Component](registry, c.ToComponentConfig())
+func (c TypedComponentConfig[Config, Component]) LoadComponent(container IComponentContainer) (component Component, err error) {
+	return LoadComponent[Component](container, c.ToComponentConfig())
 }
 
-func LoadComponent[Component any](registry IComponentRegistry, config ComponentConfig) (ret Component, err error) {
+func LoadComponent[Component any](container IComponentContainer, config ComponentConfig) (ret Component, err error) {
 	if config.Type == "" && config.Refer == "" {
 		err = fmt.Errorf("%w, type and refer must be set, expected component type: %s", ErrComponentConfigInvalid, reflect.TypeOf(ret))
 		return
 	}
-	r, err := registry.LoadAnonymousComponent(config)
+	r, err := container.LoadAnonymousComponent(config)
 	if err != nil {
 		return
 	}
