@@ -1,8 +1,23 @@
-package compcont
+package compcontrt
 
 import (
 	"fmt"
 	"sync"
+
+	"github.com/go-compcont/compcont/compcont"
+)
+
+type ComponentName = compcont.ComponentName
+type ComponentType = compcont.ComponentType
+type IFactoryRegistry = compcont.IFactoryRegistry
+type IComponentContainer = compcont.IComponentContainer
+
+type ComponentMetadata = compcont.ComponentMetadata
+type ComponentConfig = compcont.ComponentConfig
+
+var (
+	ErrComponentNameNotFound       = compcont.ErrComponentNameNotFound
+	ErrComponentDependencyNotFound = compcont.ErrComponentDependencyNotFound
 )
 
 type innerComponent struct {

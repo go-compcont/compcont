@@ -1,9 +1,15 @@
-package compcont
+package compcontrt
 
 import (
 	"fmt"
 	"sync"
+
+	"github.com/go-compcont/compcont/compcont"
 )
+
+type IFactory = compcont.IFactory
+
+var ErrComponentTypeNotRegistered = compcont.ErrComponentTypeNotRegistered
 
 type FactoryRegistry struct {
 	factories map[ComponentType]IFactory

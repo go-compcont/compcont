@@ -3,6 +3,9 @@ package compcont
 import (
 	"fmt"
 	"reflect"
+	"time"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 type TypedCreateComponentFunc[Config any, Component any] func(container IComponentContainer, config Config) (component Component, err error)
@@ -30,6 +33,27 @@ func TypedCreateComponent[Config any, Component any](typedConstructor TypedCreat
 			return
 		}
 	}
+}
+
+func decodeMapConfig[C any](mapConfig map[string]any, structureConfig *C) (err error) {
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		TagName:     "ccf",
+		ErrorUnused: true,            // 配置文件如果多余出未使用的字段，则报错
+		ZeroFields:  true,            // decode前对传入的结构体清零
+		Result:      structureConfig, // 目标结构体
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),     // 自动解析duration
+			mapstructure.StringToTimeHookFunc(time.RFC3339), // 自动解析时间
+		),
+	})
+	if err != nil {
+		return
+	}
+	err = decoder.Decode(mapConfig)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func TypedDestoryComponent[Component any](typedDestructor TypedDestroyComponentFunc[Component]) DestroyComponentFunc {

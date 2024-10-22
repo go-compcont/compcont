@@ -1,8 +1,9 @@
-package compcont
+package compcontrt
 
 import (
 	"testing"
 
+	"github.com/go-compcont/compcont/compcont"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +21,7 @@ type ComponentA struct {
 
 func (a *ComponentA) GetConfigA() ConfigA { return a.ConfigA }
 
-var factoryA = &TypedSimpleComponentFactory[ConfigA, IComponentA]{
+var factoryA = &compcont.TypedSimpleComponentFactory[ConfigA, IComponentA]{
 	TypeName: "a",
 	TypedCreateComponentFunc: func(registry IComponentContainer, config ConfigA) (component IComponentA, err error) {
 		component = &ComponentA{
@@ -31,8 +32,8 @@ var factoryA = &TypedSimpleComponentFactory[ConfigA, IComponentA]{
 }
 
 type ConfigB struct {
-	TestB  string                                     `ccf:"test_b"`
-	ReferA TypedComponentConfig[ConfigA, IComponentA] `ccf:"refer_a"`
+	TestB  string                                              `ccf:"test_b"`
+	ReferA compcont.TypedComponentConfig[ConfigA, IComponentA] `ccf:"refer_a"`
 }
 
 type IComponentB interface {
@@ -48,7 +49,7 @@ func (a *ComponentB) GetConfigB() ConfigB {
 	return a.ConfigB
 }
 
-var factoryB = &TypedSimpleComponentFactory[ConfigB, IComponentB]{
+var factoryB = &compcont.TypedSimpleComponentFactory[ConfigB, IComponentB]{
 	TypeName: "b",
 	TypedCreateComponentFunc: func(registry IComponentContainer, config ConfigB) (component IComponentB, err error) {
 		componentA, err := config.ReferA.LoadComponent(registry)
@@ -69,18 +70,18 @@ func Test(t *testing.T) {
 
 	registry := NewComponentContainer()
 	err := registry.LoadNamedComponents(map[ComponentName]ComponentConfig{
-		"ca": TypedComponentConfig[ConfigA, IComponentA]{
+		"ca": compcont.TypedComponentConfig[ConfigA, IComponentA]{
 			Type: "a",
 			Config: ConfigA{
 				TestA: "testa",
 			},
 		}.ToComponentConfig(),
-		"cb": (&TypedComponentConfig[ConfigB, IComponentB]{
+		"cb": (&compcont.TypedComponentConfig[ConfigB, IComponentB]{
 			Type: "b",
 			Deps: []ComponentName{"ca"},
 			Config: ConfigB{
 				TestB:  "testb",
-				ReferA: TypedComponentConfig[ConfigA, IComponentA]{Refer: "ca"},
+				ReferA: compcont.TypedComponentConfig[ConfigA, IComponentA]{Refer: "ca"},
 			},
 		}).ToComponentConfig(),
 	})
@@ -98,12 +99,12 @@ func Test(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	componentB, err := LoadComponent[IComponentB](registry, ComponentConfig{Refer: "cb"})
+	componentB, err := compcont.LoadComponent[IComponentB](registry, ComponentConfig{Refer: "cb"})
 	assert.NoError(t, err)
 
 	assert.Equal(t, "testb", componentB.GetConfigB().TestB)
 
-	componentB1, err := LoadComponent[IComponentB](registry, ComponentConfig{Refer: "cb1"})
+	componentB1, err := compcont.LoadComponent[IComponentB](registry, ComponentConfig{Refer: "cb1"})
 	assert.NoError(t, err)
 
 	assert.Equal(t, "testb", componentB1.GetConfigB().TestB)

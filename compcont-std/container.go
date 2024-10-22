@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-compcont/compcont/compcont"
+	compcontrt "github.com/go-compcont/compcont/compcont-runtime"
 	"gopkg.in/yaml.v3"
 )
 
@@ -62,7 +63,7 @@ var containerFactory = &compcont.TypedSimpleComponentFactory[ContainerConfig, co
 			return
 		}
 		component = &Container{
-			IComponentContainer: compcont.NewComponentContainer(compcont.WithFactoryRegistry(container.FactoryRegistry())),
+			IComponentContainer: compcontrt.NewComponentContainer(compcontrt.WithFactoryRegistry(container.FactoryRegistry())),
 			parent:              container,
 		}
 		err = component.LoadNamedComponents(componentConfigs)
