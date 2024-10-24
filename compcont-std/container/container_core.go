@@ -37,8 +37,7 @@ func (c *ComponentContainer) FactoryRegistry() compcont.IFactoryRegistry {
 	return c.factoryRegistry
 }
 
-// LoadAnonymousComponent 加载一个匿名组件，返回该组件实例，生命周期不由Registry控制，需要由该方法的调用方自行处理
-func (c *ComponentContainer) LoadAnonymousComponent(config compcont.ComponentConfig) (component compcont.Component, err error) {
+func (c *ComponentContainer) loadComponent(name compcont.ComponentName, config compcont.ComponentConfig) (component compcont.Component, err error) {
 	// 检查依赖关系是否满足
 	for _, dep := range config.Deps {
 		if _, ok := c.components[dep]; !ok {
@@ -54,7 +53,10 @@ func (c *ComponentContainer) LoadAnonymousComponent(config compcont.ComponentCon
 	}
 
 	// 构造组件实例
-	instance, err := factory.CreateInstance(c, config.Config)
+	instance, err := factory.CreateInstance(compcont.Context{
+		Name:      name,
+		Container: c,
+	}, config.Config)
 	if err != nil {
 		return
 	}
@@ -71,6 +73,19 @@ func (c *ComponentContainer) LoadAnonymousComponent(config compcont.ComponentCon
 		Dependencies: deps,
 		Instance:     instance,
 	}
+	return
+}
+
+// LoadAnonymousComponent 加载一个匿名组件，返回该组件实例，生命周期不由Registry控制，需要由该方法的调用方自行处理
+func (c *ComponentContainer) LoadAnonymousComponent(config compcont.ComponentConfig) (component compcont.Component, err error) {
+	return c.loadComponent("", config)
+}
+
+// PutComponent implements compcont.IComponentContainer.
+func (c *ComponentContainer) PutComponent(name compcont.ComponentName, component compcont.Component) (err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.components[name] = component
 	return
 }
 
@@ -110,13 +125,12 @@ func (c *ComponentContainer) LoadNamedComponents(configMap map[compcont.Componen
 
 	// 组件的顺序加载器，TODO 可以实现组件的并发启动优化
 	for _, name := range orders {
-		component, err := c.LoadAnonymousComponent(configMap[name])
+		component, err := c.loadComponent(name, configMap[name])
 		if err != nil {
 			return err
 		}
 		c.mu.Lock()
 		c.components[name] = compcont.Component{
-			Name:         name,
 			Instance:     component.Instance,
 			Dependencies: dagGraph[name],
 			Type:         configMap[name].Type,

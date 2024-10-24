@@ -8,5 +8,6 @@ type IComponentContainer interface {
 	UnloadNamedComponents(name []ComponentName, recursive bool) error               // 卸载一批组件，若指定recursive则递归地卸载依赖组件
 	LoadAnonymousComponent(config ComponentConfig) (component Component, err error) // 立即加载一个匿名的组件
 	GetComponent(name ComponentName) (component Component, err error)               // 获取一个已加载的具名组件
+	PutComponent(name ComponentName, component Component) (err error)               // 直接放入一个组件
 	GetParent() IComponentContainer                                                 // 如果是根容器，则返回nil
 }

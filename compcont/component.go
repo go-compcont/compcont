@@ -20,16 +20,20 @@ type ComponentConfig struct {
 
 // 组件的结构
 type Component struct {
-	Name         ComponentName
 	Type         ComponentType
 	Dependencies map[ComponentName]struct{}
 	Instance     any
+}
+
+type Context struct {
+	Container IComponentContainer
+	Name      ComponentName
 }
 
 // 一个组件工厂
 type IComponentFactory interface {
 	Type() ComponentType // 组件唯一类型名称
 	// 组件创建器，这里并没有明确config应该到底是什么类型，可以放到具体实现上既可以是map也可以是struct
-	CreateInstance(container IComponentContainer, config any) (instance any, err error)
-	DestroyInstance(container IComponentContainer, instance any) (err error) // 组件销毁器
+	CreateInstance(ctx Context, config any) (instance any, err error)
+	DestroyInstance(ctx Context, instance any) (err error) // 组件销毁器
 }
