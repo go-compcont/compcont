@@ -10,18 +10,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const ImportContainerType compcont.ComponentType = "std.import-container"
+const ContainerImportType compcont.ComponentType = "std.container-import"
 
 type ImportFileConfig map[string]compcont.ComponentConfig
 
-type ImportContainerConfig struct {
+type ContainerImportConfig struct {
 	Import string `ccf:"import"`
 }
 
-func MustRegisterImportContainer(r compcont.IFactoryRegistry) {
-	r.Register(&compcont.TypedSimpleComponentFactory[ImportContainerConfig, compcont.IComponentContainer]{
-		TypeName: ImportContainerType,
-		CreateInstanceFunc: func(container compcont.IComponentContainer, config ImportContainerConfig) (instance compcont.IComponentContainer, err error) {
+func MustRegisterContainerImport(r compcont.IFactoryRegistry) {
+	r.Register(&compcont.TypedSimpleComponentFactory[ContainerImportConfig, compcont.IComponentContainer]{
+		TypeName: ContainerImportType,
+		CreateInstanceFunc: func(container compcont.IComponentContainer, config ContainerImportConfig) (instance compcont.IComponentContainer, err error) {
 			instance = NewComponentContainer(WithFactoryRegistry(container.FactoryRegistry()))
 			var bs []byte
 			bs, err = os.ReadFile(config.Import)
@@ -52,5 +52,5 @@ func MustRegisterImportContainer(r compcont.IFactoryRegistry) {
 }
 
 func init() {
-	MustRegisterImportContainer(compcont.DefaultFactoryRegistry)
+	MustRegisterContainerImport(compcont.DefaultFactoryRegistry)
 }

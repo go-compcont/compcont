@@ -2,16 +2,16 @@ package container
 
 import "github.com/go-compcont/compcont/compcont"
 
-const InlineContainerType compcont.ComponentType = "std.inline-container"
+const InlineContainerType compcont.ComponentType = "std.container-inline"
 
-type InlineContainerConfig struct {
+type ContainerInlineConfig struct {
 	Components map[compcont.ComponentName]compcont.ComponentConfig `ccf:"components"`
 }
 
-func MustRegisterInlineContainer(r compcont.IFactoryRegistry) {
-	r.Register(&compcont.TypedSimpleComponentFactory[InlineContainerConfig, compcont.IComponentContainer]{
+func MustRegisterContainerInline(r compcont.IFactoryRegistry) {
+	r.Register(&compcont.TypedSimpleComponentFactory[ContainerInlineConfig, compcont.IComponentContainer]{
 		TypeName: InlineContainerType,
-		CreateInstanceFunc: func(container compcont.IComponentContainer, config InlineContainerConfig) (instance compcont.IComponentContainer, err error) {
+		CreateInstanceFunc: func(container compcont.IComponentContainer, config ContainerInlineConfig) (instance compcont.IComponentContainer, err error) {
 			instance = NewComponentContainer(WithFactoryRegistry(container.FactoryRegistry()))
 			err = instance.LoadNamedComponents(config.Components)
 			return
@@ -20,5 +20,5 @@ func MustRegisterInlineContainer(r compcont.IFactoryRegistry) {
 }
 
 func init() {
-	MustRegisterInlineContainer(compcont.DefaultFactoryRegistry)
+	MustRegisterContainerInline(compcont.DefaultFactoryRegistry)
 }
