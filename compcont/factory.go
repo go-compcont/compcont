@@ -1,30 +1,32 @@
-package compcontrt
+package compcont
 
 import (
-	"errors"
 	"fmt"
 	"sync"
-
-	"github.com/go-compcont/compcont/compcont"
 )
 
-type IFactory = compcont.IFactory
+var DefaultFactoryRegistry IFactoryRegistry = NewFactoryRegistry()
 
-var ErrComponentTypeNotRegistered = errors.New("component type not registered")
+// 组件工厂的抽象
+type IFactoryRegistry interface {
+	Register(f IComponentFactory)                                // 注册组件工厂
+	RegisteredComponentTypes() (types []ComponentType)           // 获取所有已注册的组件工厂
+	GetFactory(t ComponentType) (f IComponentFactory, err error) // 根据组件类型获取组件工厂
+}
 
 type FactoryRegistry struct {
-	factories map[ComponentType]IFactory
+	factories map[ComponentType]IComponentFactory
 	mu        sync.RWMutex
 }
 
 func NewFactoryRegistry() IFactoryRegistry {
 	return &FactoryRegistry{
-		factories: make(map[ComponentType]IFactory),
+		factories: make(map[ComponentType]IComponentFactory),
 	}
 }
 
 // Register implements IComponentFactoryRegistry.
-func (c *FactoryRegistry) Register(f IFactory) {
+func (c *FactoryRegistry) Register(f IComponentFactory) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.factories[f.Type()] = f
@@ -40,7 +42,7 @@ func (c *FactoryRegistry) RegisteredComponentTypes() (types []ComponentType) {
 	return
 }
 
-func (c *FactoryRegistry) GetFactory(t ComponentType) (f IFactory, err error) {
+func (c *FactoryRegistry) GetFactory(t ComponentType) (f IComponentFactory, err error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	var ok bool
@@ -50,8 +52,4 @@ func (c *FactoryRegistry) GetFactory(t ComponentType) (f IFactory, err error) {
 		return
 	}
 	return
-}
-
-func init() {
-	compcont.DefaultFactoryRegistry = NewFactoryRegistry()
 }

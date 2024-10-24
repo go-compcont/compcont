@@ -1,30 +1,30 @@
-package compcontrt
+package container
 
 import (
-	"errors"
 	"fmt"
 	"slices"
+
+	"github.com/go-compcont/compcont/compcont"
 )
 
-var ErrCircularDependency = errors.New("circular dependency detected")
-
-func topologicalSort(cfgMap map[ComponentName]ComponentConfig) ([]ComponentName, error) {
+// 拓扑排序
+func topologicalSort(cfgMap map[compcont.ComponentName]compcont.ComponentConfig) ([]compcont.ComponentName, error) {
 	// 计算每个节点的入度
-	inDegree := make(map[ComponentName]int)
+	inDegree := make(map[compcont.ComponentName]int)
 	for name := range cfgMap {
 		inDegree[name] = 0
 	}
 	for name, cfg := range cfgMap {
 		for _, dep := range cfg.Deps {
 			if _, ok := cfgMap[dep]; !ok {
-				return nil, fmt.Errorf("component config error, %w, dependency %s not found for component %s", ErrComponentDependencyNotFound, dep, name)
+				return nil, fmt.Errorf("component config error, %w, dependency %s not found for component %s", compcont.ErrComponentDependencyNotFound, dep, name)
 			}
 			inDegree[dep]++
 		}
 	}
 
 	// 初始化队列，将所有入度为 0 的节点加入队列
-	queue := []ComponentName{}
+	queue := []compcont.ComponentName{}
 	for name, degree := range inDegree {
 		if degree == 0 {
 			queue = append(queue, name)
@@ -32,7 +32,7 @@ func topologicalSort(cfgMap map[ComponentName]ComponentConfig) ([]ComponentName,
 	}
 
 	// 拓扑排序
-	result := []ComponentName{}
+	result := []compcont.ComponentName{}
 	for len(queue) > 0 {
 		node := queue[0]
 		queue = queue[1:]
@@ -48,7 +48,7 @@ func topologicalSort(cfgMap map[ComponentName]ComponentConfig) ([]ComponentName,
 
 	// 检查是否有环
 	if len(result) != len(cfgMap) {
-		return nil, ErrCircularDependency
+		return nil, compcont.ErrCircularDependency
 	}
 
 	slices.Reverse(result)
