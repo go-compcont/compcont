@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"fmt"
 	"log/slog"
 	"reflect"
 	"testing"
@@ -17,6 +18,7 @@ var testComp compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[
 		instance = config
 		slog.Info(
 			"echo component",
+			slog.String("absolute", fmt.Sprint(ctx.GetAbsolutePath())),
 			slog.String("name", string(ctx.Name)),
 			slog.String("container", reflect.TypeOf(ctx.Container).String()),
 			slog.Any("instance", instance),
@@ -34,6 +36,7 @@ var outputIns compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory
 		}
 		slog.Info(
 			"output component",
+			slog.String("absolute", fmt.Sprint(ctx.GetAbsolutePath())),
 			slog.String("name", string(ctx.Name)),
 			slog.String("container", reflect.TypeOf(ctx.Container).String()),
 			slog.Any("output", s),
@@ -82,8 +85,13 @@ c1:
         type: "output"
         config:
           type: "std.finder"
-          config: { path: "../output_test4" }
-    
+          config: "../output_test4"
+
+c2:
+  type: "std.container-import"
+  deps: [c1]
+  config:
+    from_file: "test.yaml"
 `
 
 func TestFinder(t *testing.T) {

@@ -1,6 +1,9 @@
 package compcont
 
-import "regexp"
+import (
+	"regexp"
+	"slices"
+)
 
 type ComponentType string
 
@@ -29,6 +32,24 @@ type Component struct {
 type Context struct {
 	Container IComponentContainer
 	Name      ComponentName
+}
+
+func (c *Context) GetAbsolutePath() (path []ComponentName) {
+	path = append(path, c.Name)
+	currentNode := c.Container
+	for {
+		// 非根节点才加入path
+		if n := currentNode.GetSelfComponentName(); n != "" {
+			path = append(path, n)
+		}
+		parent := currentNode.GetParent()
+		if parent == nil {
+			break
+		}
+		currentNode = parent
+	}
+	slices.Reverse(path)
+	return
 }
 
 // 一个组件工厂

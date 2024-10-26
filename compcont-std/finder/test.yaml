@@ -1,0 +1,5 @@
+test1_from_file:
+  type: "echo"
+  config: "Container test1-from-file"
+
+c1: { type: "std.finder", config: "../c1" }

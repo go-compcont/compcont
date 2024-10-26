@@ -9,10 +9,6 @@ import (
 
 const TypeName compcont.ComponentType = "std.finder"
 
-type Config struct {
-	Path string `ccf:"path"`
-}
-
 func find(currentNode compcont.IComponentContainer, findPath []compcont.ComponentName, absolute bool) (instance any, err error) {
 	var component compcont.Component
 	// 如果是绝对路径，将currentNode指针指向容器树的根节点
@@ -57,11 +53,11 @@ func find(currentNode compcont.IComponentContainer, findPath []compcont.Componen
 }
 
 func MustRegister(r compcont.IFactoryRegistry) {
-	r.Register(&compcont.TypedSimpleComponentFactory[Config, any]{
+	r.Register(&compcont.TypedSimpleComponentFactory[string, any]{
 		TypeName: TypeName,
-		CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance any, err error) {
-			if config.Path != "" {
-				parts := strings.Split(config.Path, "/")
+		CreateInstanceFunc: func(ctx compcont.Context, path string) (instance any, err error) {
+			if path != "" {
+				parts := strings.Split(path, "/")
 				absolute := false
 				if parts[0] == "" { // 绝对路径
 					absolute = true

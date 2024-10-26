@@ -25,6 +25,7 @@ func MustRegisterContainerImport(r compcont.IFactoryRegistry) {
 			instance = NewComponentContainer(
 				WithFactoryRegistry(ctx.Container.FactoryRegistry()),
 				WithParentContainer(ctx.Container),
+				WithSelfNodeName(ctx.Name),
 			)
 			var bs []byte
 			bs, err = os.ReadFile(config.FromFile)

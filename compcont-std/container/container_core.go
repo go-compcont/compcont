@@ -8,10 +8,16 @@ import (
 )
 
 type ComponentContainer struct {
+	selfName        compcont.ComponentName
 	parent          compcont.IComponentContainer
 	factoryRegistry compcont.IFactoryRegistry
 	components      map[compcont.ComponentName]compcont.Component
 	mu              sync.RWMutex
+}
+
+// GetSelfComponentName implements compcont.IComponentContainer.
+func (c *ComponentContainer) GetSelfComponentName() compcont.ComponentName {
+	return c.selfName
 }
 
 // GetParent implements compcont.IComponentContainer.
@@ -171,6 +177,7 @@ func (c *ComponentContainer) LoadedComponentNames() (names []compcont.ComponentN
 type options struct {
 	factoryRegistry compcont.IFactoryRegistry
 	parent          compcont.IComponentContainer
+	selfName        compcont.ComponentName
 }
 
 type optionsFunc func(o *options)
@@ -187,6 +194,12 @@ func WithParentContainer(parent compcont.IComponentContainer) optionsFunc {
 	}
 }
 
+func WithSelfNodeName(selfName compcont.ComponentName) optionsFunc {
+	return func(o *options) {
+		o.selfName = selfName
+	}
+}
+
 func NewComponentContainer(optFns ...optionsFunc) (cr compcont.IComponentContainer) {
 	var opt options
 	for _, fn := range optFns {
@@ -197,6 +210,7 @@ func NewComponentContainer(optFns ...optionsFunc) (cr compcont.IComponentContain
 		opt.factoryRegistry = compcont.DefaultFactoryRegistry
 	}
 	return &ComponentContainer{
+		selfName:        opt.selfName,
 		factoryRegistry: opt.factoryRegistry,
 		parent:          opt.parent,
 		components:      make(map[compcont.ComponentName]compcont.Component),
