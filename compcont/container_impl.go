@@ -2,11 +2,12 @@ package compcont
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 )
 
 type ComponentContainer struct {
-	selfName        ComponentName
+	context         Context
 	parent          IComponentContainer
 	factoryRegistry IFactoryRegistry
 	components      map[ComponentName]Component
@@ -14,8 +15,8 @@ type ComponentContainer struct {
 }
 
 // GetSelfComponentName implements IComponentContainer.
-func (c *ComponentContainer) GetSelfComponentName() ComponentName {
-	return c.selfName
+func (c *ComponentContainer) GetContext() Context {
+	return c.context
 }
 
 // GetParent implements IComponentContainer.
@@ -43,11 +44,34 @@ func (c *ComponentContainer) FactoryRegistry() IFactoryRegistry {
 
 func (c *ComponentContainer) loadComponent(name ComponentName, config ComponentConfig) (component Component, err error) {
 	if config.Type == "" {
-		if config.Refer != "" { // 引用组件
-			return c.GetComponent(config.Refer)
+		if config.Refer == "" { // 引用组件
+			err = fmt.Errorf("%w, type && refer are empty", ErrComponentConfigInvalid)
+			return
 		}
-		err = fmt.Errorf("%w, type && refer are empty", ErrComponentConfigInvalid)
-		return
+		parts := strings.Split(config.Refer, "/")
+		absolute := false
+		if parts[0] == "" { // 绝对路径
+			absolute = true
+			parts = parts[1:]
+		}
+
+		var findPath []ComponentName
+		for _, p := range parts {
+			n := ComponentName(p)
+			if !n.Validate() {
+				err = fmt.Errorf("%w, in refer %s", ErrComponentNameInvalid, config.Refer)
+				return
+			}
+			findPath = append(findPath, n)
+		}
+
+		// 寻找到要引用的树节点，再从对应节点上获取组件
+		var ctx Context
+		ctx, err = find(c, findPath, absolute)
+		if err != nil {
+			return
+		}
+		return ctx.Container.GetComponent(ctx.Name)
 	}
 	// 检查依赖关系是否满足
 	for _, dep := range config.Deps {
@@ -63,27 +87,22 @@ func (c *ComponentContainer) loadComponent(name ComponentName, config ComponentC
 		return
 	}
 
-	// 构造组件实例
-	instance, err := factory.CreateInstance(Context{
+	ctx := Context{
+		Config:    config,
 		Name:      name,
 		Container: c,
-	}, config.Config)
+	}
+
+	// 构造组件实例
+	instance, err := factory.CreateInstance(ctx, config.Config)
 	if err != nil {
 		return
 	}
 
-	// 构造依赖
-	deps := make(map[ComponentName]struct{})
-	for _, dep := range config.Deps {
-		deps[dep] = struct{}{}
-	}
-
 	// 构造组件
-	component = Component{
-		Type:         factory.Type(),
-		Dependencies: deps,
-		Instance:     instance,
-	}
+	component = Component{Instance: instance}
+	ctx.Mount = &component
+	component.Context = ctx
 	return
 }
 
@@ -108,36 +127,35 @@ func (c *ComponentContainer) LoadNamedComponents(configMap map[ComponentName]Com
 			return fmt.Errorf("%w, name: %s", ErrComponentNameInvalid, name)
 		}
 	}
-	// 构建组件依赖图
-	dagGraph := make(map[ComponentName]map[ComponentName]struct{})
-	for name, cfg := range configMap {
-		for _, dep := range cfg.Deps {
-			if _, ok := dagGraph[name]; !ok {
-				dagGraph[name] = make(map[ComponentName]struct{})
-			}
-			dagGraph[name][dep] = struct{}{}
-		}
-	}
 
-	// 移除已存在的依赖关系
-	for name, cfg := range configMap {
-		var deps []ComponentName
-		for _, dep := range cfg.Deps {
-			c.mu.RLock()
-			_, ok := c.components[dep]
-			c.mu.RUnlock()
-			if !ok {
-				deps = append(deps, dep)
+	// 拓扑排序
+	var orders []ComponentName
+	{
+		// 构建组件依赖图
+		dag := make(map[ComponentName]set[ComponentName])
+		for name, cfg := range configMap {
+			for _, dep := range cfg.Deps {
+				// 已存在的依赖关系则不加入本次的DAG构建
+				c.mu.RLock()
+				_, ok := c.components[dep]
+				c.mu.RUnlock()
+				if ok {
+					continue
+				}
+
+				// 不存在则加入本次的DAG
+				if _, ok := dag[name]; !ok {
+					dag[name] = make(map[ComponentName]struct{})
+				}
+				dag[name][dep] = struct{}{}
 			}
 		}
-		cfg.Deps = deps
-		configMap[name] = cfg
-	}
 
-	// 对新组件集合进行拓扑排序
-	orders, err := topologicalSort(configMap)
-	if err != nil {
-		return
+		// 对新组件集合进行拓扑排序
+		orders, err = topologicalSort(dag)
+		if err != nil {
+			return
+		}
 	}
 
 	// 组件的顺序加载器，TODO 可以实现组件的并发启动优化
@@ -147,11 +165,7 @@ func (c *ComponentContainer) LoadNamedComponents(configMap map[ComponentName]Com
 			return err
 		}
 		c.mu.Lock()
-		c.components[name] = Component{
-			Instance:     component.Instance,
-			Dependencies: dagGraph[name],
-			Type:         configMap[name].Type,
-		}
+		c.components[name] = component
 		c.mu.Unlock()
 	}
 	return
@@ -175,7 +189,7 @@ func (c *ComponentContainer) LoadedComponentNames() (names []ComponentName) {
 type options struct {
 	factoryRegistry IFactoryRegistry
 	parent          IComponentContainer
-	selfName        ComponentName
+	context         Context
 }
 
 type optionsFunc func(o *options)
@@ -192,9 +206,9 @@ func WithParentContainer(parent IComponentContainer) optionsFunc {
 	}
 }
 
-func WithSelfNodeName(selfName ComponentName) optionsFunc {
+func WithContext(ctx Context) optionsFunc {
 	return func(o *options) {
-		o.selfName = selfName
+		o.context = ctx
 	}
 }
 
@@ -208,7 +222,6 @@ func NewComponentContainer(optFns ...optionsFunc) (cr IComponentContainer) {
 		opt.factoryRegistry = DefaultFactoryRegistry
 	}
 	return &ComponentContainer{
-		selfName:        opt.selfName,
 		factoryRegistry: opt.factoryRegistry,
 		parent:          opt.parent,
 		components:      make(map[ComponentName]Component),

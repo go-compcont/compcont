@@ -15,7 +15,7 @@ func MustRegisterContainerInline(r compcont.IFactoryRegistry) {
 			instance = compcont.NewComponentContainer(
 				compcont.WithParentContainer(ctx.Container),
 				compcont.WithFactoryRegistry(ctx.Container.FactoryRegistry()),
-				compcont.WithSelfNodeName(ctx.Name),
+				compcont.WithContext(ctx),
 			)
 			err = instance.LoadNamedComponents(config.Components)
 			return

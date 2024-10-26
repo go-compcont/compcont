@@ -9,9 +9,8 @@ import (
 )
 
 type TypedComponent[Instance any] struct {
-	Type         ComponentType
-	Dependencies map[ComponentName]struct{}
-	Instance     Instance
+	Context  Context
+	Instance Instance
 }
 
 func GetComponent[Instance any](container IComponentContainer, name ComponentName) (ret TypedComponent[Instance], err error) {
@@ -21,13 +20,12 @@ func GetComponent[Instance any](container IComponentContainer, name ComponentNam
 	}
 	instance, ok := r.Instance.(Instance)
 	if !ok {
-		err = fmt.Errorf("get component failed, %w, name: %s, component type: %s, expected instance type %v, but got %v", ErrComponentTypeMismatch, name, r.Type, reflect.TypeOf(ret.Instance), reflect.TypeOf(r.Instance))
+		err = fmt.Errorf("get component failed, %w, name: %s, component type: %s, expected instance type %v, but got %v", ErrComponentTypeMismatch, name, r.Context.Config.Type, reflect.TypeOf(ret.Instance), reflect.TypeOf(r.Instance))
 		return
 	}
 	ret = TypedComponent[Instance]{
-		Type:         r.Type,
-		Dependencies: r.Dependencies,
-		Instance:     instance,
+		Context:  r.Context,
+		Instance: instance,
 	}
 	return
 }
@@ -44,9 +42,8 @@ func LoadAnonymousComponent[Instance any](container IComponentContainer, config 
 		return
 	}
 	ret = TypedComponent[Instance]{
-		Type:         r.Type,
-		Dependencies: r.Dependencies,
-		Instance:     instance,
+		Context:  r.Context,
+		Instance: instance,
 	}
 	return
 }
@@ -114,7 +111,7 @@ func (f TypedDestroyInstanceFunc[Component]) ToAny() DestroyInstanceFunc {
 
 type TypedComponentConfig[Config any, Component any] struct {
 	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
-	Refer  ComponentName   `json:"refer" yaml:"refer"`   // 来自其他组件的引用
+	Refer  string          `json:"refer" yaml:"refer"`   // 来自其他组件的引用
 	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
 	Config Config          `json:"config" yaml:"config"` // 组件的自身配置
 }

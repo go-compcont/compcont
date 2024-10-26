@@ -17,21 +17,35 @@ func (n ComponentName) Validate() bool {
 
 type ComponentConfig struct {
 	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
-	Refer  ComponentName   `json:"refer" yaml:"refer"`   // 来自其他组件的引用
+	Refer  string          `json:"refer" yaml:"refer"`   // 来自其他组件的引用
 	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
 	Config any             `json:"config" yaml:"config"` // 组件的自身配置
 }
 
-// 组件的结构
+// 运行时的组件的结构
 type Component struct {
-	Type         ComponentType
-	Dependencies map[ComponentName]struct{}
-	Instance     any
+	Context  Context // 运行时一个组件必然存在一个Context，且不可变，这里使用值类型
+	Instance any
 }
 
+// 构造组件时使用的上下文环境结构
 type Context struct {
-	Container IComponentContainer
-	Name      ComponentName
+	Container IComponentContainer // 当前组件所在容器
+	Name      ComponentName       // 当前组件所在容器中的名称
+	Config    ComponentConfig     // 组件配置
+	Mount     *Component          // 组件实例有可能不存在
+}
+
+func (c *Context) FindRoot() Context {
+	currentNode := c.Container
+	for {
+		parent := currentNode.GetParent()
+		if parent == nil {
+			break
+		}
+		currentNode = parent
+	}
+	return currentNode.GetContext()
 }
 
 func (c *Context) GetAbsolutePath() (path []ComponentName) {
@@ -39,13 +53,11 @@ func (c *Context) GetAbsolutePath() (path []ComponentName) {
 	currentNode := c.Container
 	for {
 		// 非根节点才加入path
-		if n := currentNode.GetSelfComponentName(); n != "" {
-			path = append(path, n)
-		}
 		parent := currentNode.GetParent()
 		if parent == nil {
 			break
 		}
+		path = append(path, currentNode.GetContext().Name)
 		currentNode = parent
 	}
 	slices.Reverse(path)
