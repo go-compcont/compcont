@@ -23,7 +23,7 @@ func (a *ComponentA) GetConfigA() ConfigA { return a.ConfigA }
 
 var factoryA = &compcont.TypedSimpleComponentFactory[ConfigA, IComponentA]{
 	TypeName: "a",
-	CreateInstanceFunc: func(registry compcont.IComponentContainer, config ConfigA) (component IComponentA, err error) {
+	CreateInstanceFunc: func(ctx compcont.Context, config ConfigA) (component IComponentA, err error) {
 		component = &ComponentA{
 			ConfigA: config,
 		}
@@ -51,8 +51,8 @@ func (a *ComponentB) GetConfigB() ConfigB {
 
 var factoryB = &compcont.TypedSimpleComponentFactory[ConfigB, IComponentB]{
 	TypeName: "b",
-	CreateInstanceFunc: func(registry compcont.IComponentContainer, config ConfigB) (component IComponentB, err error) {
-		componentA, err := config.InnerA.LoadComponent(registry)
+	CreateInstanceFunc: func(ctx compcont.Context, config ConfigB) (component IComponentB, err error) {
+		componentA, err := config.InnerA.LoadComponent(ctx.Container)
 		if err != nil {
 			return
 		}

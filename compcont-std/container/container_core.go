@@ -25,7 +25,7 @@ func (c *ComponentContainer) GetComponent(name compcont.ComponentName) (componen
 	defer c.mu.RUnlock()
 	inner, ok := c.components[name]
 	if !ok {
-		err = compcont.ErrComponentNameNotFound
+		err = fmt.Errorf("%w, name: %s", compcont.ErrComponentNameNotFound, name)
 		return
 	}
 	component = inner
@@ -38,6 +38,13 @@ func (c *ComponentContainer) FactoryRegistry() compcont.IFactoryRegistry {
 }
 
 func (c *ComponentContainer) loadComponent(name compcont.ComponentName, config compcont.ComponentConfig) (component compcont.Component, err error) {
+	if config.Type == "" {
+		if config.Refer != "" { // 引用组件
+			return c.GetComponent(config.Refer)
+		}
+		err = fmt.Errorf("%w, type && refer are empty", compcont.ErrComponentConfigInvalid)
+		return
+	}
 	// 检查依赖关系是否满足
 	for _, dep := range config.Deps {
 		if _, ok := c.components[dep]; !ok {
@@ -91,6 +98,12 @@ func (c *ComponentContainer) PutComponent(name compcont.ComponentName, component
 
 // LoadNamedComponents 加载一批具名组件，内部会自行根据拓扑排序顺序加载组件
 func (c *ComponentContainer) LoadNamedComponents(configMap map[compcont.ComponentName]compcont.ComponentConfig) (err error) {
+	// 校验组件名称
+	for name := range configMap {
+		if !name.Validate() {
+			return fmt.Errorf("%w, name: %s", compcont.ErrComponentNameInvalid, name)
+		}
+	}
 	// 构建组件依赖图
 	dagGraph := make(map[compcont.ComponentName]map[compcont.ComponentName]struct{})
 	for name, cfg := range configMap {

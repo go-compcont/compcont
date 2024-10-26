@@ -9,7 +9,6 @@ import (
 )
 
 type TypedComponent[Instance any] struct {
-	Name         ComponentName
 	Type         ComponentType
 	Dependencies map[ComponentName]struct{}
 	Instance     Instance
@@ -77,24 +76,23 @@ func decodeMapConfig[Config any](mapConfig map[string]any, structureConfig *Conf
 	return
 }
 
-type TypedCreateInstanceFunc[Config any, Instance any] func(container IComponentContainer, config Config) (instance Instance, err error)
+type TypedCreateInstanceFunc[Config any, Instance any] func(ctx Context, config Config) (instance Instance, err error)
 
 func (f TypedCreateInstanceFunc[Config, Instance]) ToAny() CreateInstanceFunc {
 	return func(ctx Context, rawConfig any) (comp any, err error) {
-		cc := ctx.Container
 		switch v := rawConfig.(type) {
 		case nil:
 			var cfg Config
-			return f(cc, cfg)
+			return f(ctx, cfg)
 		case Config:
-			return f(cc, v)
+			return f(ctx, v)
 		case map[string]any:
 			var cfg Config
 			err = decodeMapConfig(v, &cfg)
 			if err != nil {
 				return
 			}
-			return f(cc, cfg)
+			return f(ctx, cfg)
 		default:
 			err = fmt.Errorf("unexpected config type %s", reflect.ValueOf(rawConfig))
 			return
@@ -102,13 +100,12 @@ func (f TypedCreateInstanceFunc[Config, Instance]) ToAny() CreateInstanceFunc {
 	}
 }
 
-type TypedDestroyInstanceFunc[Instance any] func(container IComponentContainer, instance Instance) (err error)
+type TypedDestroyInstanceFunc[Instance any] func(ctx Context, instance Instance) (err error)
 
 func (f TypedDestroyInstanceFunc[Component]) ToAny() DestroyInstanceFunc {
 	return func(ctx Context, component any) (err error) {
-		cc := ctx.Container
 		if v, ok := component.(Component); ok {
-			return f(cc, v)
+			return f(ctx, v)
 		}
 		err = fmt.Errorf("unexpected component type %s", reflect.ValueOf(component))
 		return
@@ -117,6 +114,7 @@ func (f TypedDestroyInstanceFunc[Component]) ToAny() DestroyInstanceFunc {
 
 type TypedComponentConfig[Config any, Component any] struct {
 	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
+	Refer  ComponentName   `json:"refer" yaml:"refer"`   // 来自其他组件的引用
 	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
 	Config Config          `json:"config" yaml:"config"` // 组件的自身配置
 }
@@ -124,6 +122,7 @@ type TypedComponentConfig[Config any, Component any] struct {
 func (c TypedComponentConfig[Config, Component]) ToAny() ComponentConfig {
 	return ComponentConfig{
 		Type:   c.Type,
+		Refer:  c.Refer,
 		Deps:   c.Deps,
 		Config: c.Config,
 	}

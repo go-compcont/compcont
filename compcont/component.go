@@ -14,6 +14,7 @@ func (n ComponentName) Validate() bool {
 
 type ComponentConfig struct {
 	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
+	Refer  ComponentName   `json:"refer" yaml:"refer"`   // 来自其他组件的引用
 	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
 	Config any             `json:"config" yaml:"config"` // 组件的自身配置
 }

@@ -1,4 +1,4 @@
-package refer
+package finder
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/go-compcont/compcont/compcont"
 )
 
-const TypeName compcont.ComponentType = "std.refer"
+const TypeName compcont.ComponentType = "std.finder"
 
 type Config struct {
 	Path string `ccf:"path"`
@@ -32,6 +32,7 @@ func find(currentNode compcont.IComponentContainer, findPath []compcont.Componen
 		}
 		if partName == ".." {
 			currentNode = currentNode.GetParent()
+			continue
 		}
 		component, err = currentNode.GetComponent(partName)
 		if err != nil {
@@ -58,7 +59,7 @@ func find(currentNode compcont.IComponentContainer, findPath []compcont.Componen
 func MustRegister(r compcont.IFactoryRegistry) {
 	r.Register(&compcont.TypedSimpleComponentFactory[Config, any]{
 		TypeName: TypeName,
-		CreateInstanceFunc: func(container compcont.IComponentContainer, config Config) (instance any, err error) {
+		CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance any, err error) {
 			if config.Path != "" {
 				parts := strings.Split(config.Path, "/")
 				absolute := false
@@ -71,10 +72,14 @@ func MustRegister(r compcont.IFactoryRegistry) {
 				for _, p := range parts {
 					findPath = append(findPath, compcont.ComponentName(p))
 				}
-				return find(container, findPath, absolute)
+				return find(ctx.Container, findPath, absolute)
 			}
 			err = fmt.Errorf("refer component arguments invalid")
 			return
 		},
 	})
+}
+
+func init() {
+	MustRegister(compcont.DefaultFactoryRegistry)
 }

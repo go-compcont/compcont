@@ -15,15 +15,17 @@ const ContainerImportType compcont.ComponentType = "std.container-import"
 type ImportFileConfig map[string]compcont.ComponentConfig
 
 type ContainerImportConfig struct {
-	FromFile     string                                            `ccf:"from_file"`
-	ExportMapper map[compcont.ComponentName]compcont.ComponentName `ccf:"export_mapper"`
+	FromFile string `ccf:"from_file"` // 从外部文件导入配置
 }
 
 func MustRegisterContainerImport(r compcont.IFactoryRegistry) {
 	r.Register(&compcont.TypedSimpleComponentFactory[ContainerImportConfig, compcont.IComponentContainer]{
 		TypeName: ContainerImportType,
-		CreateInstanceFunc: func(container compcont.IComponentContainer, config ContainerImportConfig) (instance compcont.IComponentContainer, err error) {
-			instance = NewComponentContainer(WithFactoryRegistry(container.FactoryRegistry()))
+		CreateInstanceFunc: func(ctx compcont.Context, config ContainerImportConfig) (instance compcont.IComponentContainer, err error) {
+			instance = NewComponentContainer(
+				WithFactoryRegistry(ctx.Container.FactoryRegistry()),
+				WithParentContainer(ctx.Container),
+			)
 			var bs []byte
 			bs, err = os.ReadFile(config.FromFile)
 			if err != nil {
@@ -47,18 +49,6 @@ func MustRegisterContainerImport(r compcont.IFactoryRegistry) {
 				return
 			}
 			err = instance.LoadNamedComponents(components)
-
-			for inParent, inChild := range config.ExportMapper {
-				var comp compcont.Component
-				comp, err = instance.GetComponent(inChild)
-				if err != nil {
-					return
-				}
-				err = instance.PutComponent(inParent, comp)
-				if err != nil {
-					return
-				}
-			}
 			return
 		},
 	})
