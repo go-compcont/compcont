@@ -33,7 +33,7 @@ func MustRegisterContainerImport(r compcont.IFactoryRegistry) {
 				return
 			}
 
-			components := make(map[compcont.ComponentName]compcont.ComponentConfig)
+			components := []compcont.ComponentConfig{}
 			switch {
 			case strings.HasSuffix(config.FromFile, ".json"):
 				err = json.Unmarshal(bs, &components)

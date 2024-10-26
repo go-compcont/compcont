@@ -42,7 +42,7 @@ func (c *ComponentContainer) FactoryRegistry() IFactoryRegistry {
 	return c.factoryRegistry
 }
 
-func (c *ComponentContainer) loadComponent(name ComponentName, config ComponentConfig) (component Component, err error) {
+func (c *ComponentContainer) loadComponent(config ComponentConfig) (component Component, err error) {
 	if config.Type == "" {
 		if config.Refer == "" { // 引用组件
 			err = fmt.Errorf("%w, type && refer are empty", ErrComponentConfigInvalid)
@@ -71,7 +71,7 @@ func (c *ComponentContainer) loadComponent(name ComponentName, config ComponentC
 		if err != nil {
 			return
 		}
-		return ctx.Container.GetComponent(ctx.Name)
+		return ctx.Container.GetComponent(ctx.Config.Name)
 	}
 	// 检查依赖关系是否满足
 	for _, dep := range config.Deps {
@@ -89,7 +89,6 @@ func (c *ComponentContainer) loadComponent(name ComponentName, config ComponentC
 
 	ctx := Context{
 		Config:    config,
-		Name:      name,
 		Container: c,
 	}
 
@@ -108,7 +107,7 @@ func (c *ComponentContainer) loadComponent(name ComponentName, config ComponentC
 
 // LoadAnonymousComponent 加载一个匿名组件，返回该组件实例，生命周期不由Registry控制，需要由该方法的调用方自行处理
 func (c *ComponentContainer) LoadAnonymousComponent(config ComponentConfig) (component Component, err error) {
-	return c.loadComponent("", config)
+	return c.loadComponent(config)
 }
 
 // PutComponent implements IComponentContainer.
@@ -120,12 +119,14 @@ func (c *ComponentContainer) PutComponent(name ComponentName, component Componen
 }
 
 // LoadNamedComponents 加载一批具名组件，内部会自行根据拓扑排序顺序加载组件
-func (c *ComponentContainer) LoadNamedComponents(configMap map[ComponentName]ComponentConfig) (err error) {
-	// 校验组件名称
-	for name := range configMap {
-		if !name.Validate() {
-			return fmt.Errorf("%w, name: %s", ErrComponentNameInvalid, name)
+func (c *ComponentContainer) LoadNamedComponents(configs []ComponentConfig) (err error) {
+	// 校验组件名称并构造map
+	configMap := make(map[ComponentName]ComponentConfig)
+	for _, cfg := range configs {
+		if !cfg.Name.Validate() {
+			return fmt.Errorf("%w, name: %s", ErrComponentNameInvalid, cfg.Name)
 		}
+		configMap[cfg.Name] = cfg
 	}
 
 	// 拓扑排序
@@ -133,7 +134,11 @@ func (c *ComponentContainer) LoadNamedComponents(configMap map[ComponentName]Com
 	{
 		// 构建组件依赖图
 		dag := make(map[ComponentName]set[ComponentName])
-		for name, cfg := range configMap {
+		for _, cfg := range configs {
+			name := cfg.Name
+			if _, ok := dag[name]; !ok {
+				dag[name] = make(map[ComponentName]struct{})
+			}
 			for _, dep := range cfg.Deps {
 				// 已存在的依赖关系则不加入本次的DAG构建
 				c.mu.RLock()
@@ -142,12 +147,7 @@ func (c *ComponentContainer) LoadNamedComponents(configMap map[ComponentName]Com
 				if ok {
 					continue
 				}
-
-				// 不存在则加入本次的DAG
-				if _, ok := dag[name]; !ok {
-					dag[name] = make(map[ComponentName]struct{})
-				}
-				dag[name][dep] = struct{}{}
+				dag[cfg.Name][dep] = struct{}{}
 			}
 		}
 
@@ -160,7 +160,7 @@ func (c *ComponentContainer) LoadNamedComponents(configMap map[ComponentName]Com
 
 	// 组件的顺序加载器，TODO 可以实现组件的并发启动优化
 	for _, name := range orders {
-		component, err := c.loadComponent(name, configMap[name])
+		component, err := c.loadComponent(configMap[name])
 		if err != nil {
 			return err
 		}

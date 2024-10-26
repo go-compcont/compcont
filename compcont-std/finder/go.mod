@@ -16,3 +16,4 @@ require (
 )
 
 replace github.com/go-compcont/compcont/compcont v0.0.0 => ../../compcont
+replace github.com/go-compcont/compcont/compcont-std v0.0.0 => ../compcont-std

@@ -68,8 +68,9 @@ func Test(t *testing.T) {
 	DefaultFactoryRegistry.Register(factoryB)
 
 	registry := NewComponentContainer()
-	err := registry.LoadNamedComponents(map[ComponentName]ComponentConfig{
-		"cb": (&TypedComponentConfig[ConfigB, IComponentB]{
+	err := registry.LoadNamedComponents([]ComponentConfig{
+		(&TypedComponentConfig[ConfigB, IComponentB]{
+			Name: "cb",
 			Type: "b",
 			Config: ConfigB{
 				TestB: "testb",

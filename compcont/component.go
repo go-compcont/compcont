@@ -16,6 +16,7 @@ func (n ComponentName) Validate() bool {
 }
 
 type ComponentConfig struct {
+	Name   ComponentName   `json:"name" yaml:"name"`     // 组件名称，不填为空值，即匿名组件
 	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
 	Refer  string          `json:"refer" yaml:"refer"`   // 来自其他组件的引用
 	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
@@ -31,7 +32,6 @@ type Component struct {
 // 构造组件时使用的上下文环境结构
 type Context struct {
 	Container IComponentContainer // 当前组件所在容器
-	Name      ComponentName       // 当前组件所在容器中的名称
 	Config    ComponentConfig     // 组件配置
 	Mount     *Component          // 组件实例有可能不存在
 }
@@ -49,7 +49,7 @@ func (c *Context) FindRoot() Context {
 }
 
 func (c *Context) GetAbsolutePath() (path []ComponentName) {
-	path = append(path, c.Name)
+	path = append(path, c.Config.Name)
 	currentNode := c.Container
 	for {
 		// 非根节点才加入path
@@ -57,7 +57,7 @@ func (c *Context) GetAbsolutePath() (path []ComponentName) {
 		if parent == nil {
 			break
 		}
-		path = append(path, currentNode.GetContext().Name)
+		path = append(path, currentNode.GetContext().Config.Name)
 		currentNode = parent
 	}
 	slices.Reverse(path)

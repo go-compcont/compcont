@@ -110,6 +110,7 @@ func (f TypedDestroyInstanceFunc[Component]) ToAny() DestroyInstanceFunc {
 }
 
 type TypedComponentConfig[Config any, Component any] struct {
+	Name   ComponentName   `json:"name" yaml:"name"`
 	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
 	Refer  string          `json:"refer" yaml:"refer"`   // 来自其他组件的引用
 	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
@@ -118,6 +119,7 @@ type TypedComponentConfig[Config any, Component any] struct {
 
 func (c TypedComponentConfig[Config, Component]) ToAny() ComponentConfig {
 	return ComponentConfig{
+		Name:   c.Name,
 		Type:   c.Type,
 		Refer:  c.Refer,
 		Deps:   c.Deps,

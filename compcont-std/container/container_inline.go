@@ -5,7 +5,7 @@ import "github.com/go-compcont/compcont/compcont"
 const InlineContainerType compcont.ComponentType = "std.container-inline"
 
 type ContainerInlineConfig struct {
-	Components map[compcont.ComponentName]compcont.ComponentConfig `ccf:"components"`
+	Components []compcont.ComponentConfig `ccf:"components"`
 }
 
 func MustRegisterContainerInline(r compcont.IFactoryRegistry) {
