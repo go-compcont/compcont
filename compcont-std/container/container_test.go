@@ -1,4 +1,4 @@
-package finder
+package container
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/go-compcont/compcont/compcont"
-	_ "github.com/go-compcont/compcont/compcont-std/container"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )
@@ -85,9 +84,7 @@ const cfgYaml = `
 
       - name: finder_output
         type: "output"
-        config:
-          type: "std.finder"
-          config: "../output_test4"
+        config: { refer: "../output_test4" }
 
 - name: c2
   type: "std.container-import"

@@ -57,12 +57,13 @@ func (c *ComponentContainer) loadComponent(config ComponentConfig) (component Co
 
 		var findPath []ComponentName
 		for _, p := range parts {
-			n := ComponentName(p)
-			if !n.Validate() {
+
+			if n := ComponentName(p); p != "." && p != ".." && !n.Validate() {
 				err = fmt.Errorf("%w, in refer %s", ErrComponentNameInvalid, config.Refer)
 				return
+			} else {
+				findPath = append(findPath, n)
 			}
-			findPath = append(findPath, n)
 		}
 
 		// 寻找到要引用的树节点，再从对应节点上获取组件

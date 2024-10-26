@@ -1,4 +1,4 @@
-module github.com/go-compcont/compcont/compcont-std/finder
+module github.com/go-compcont/compcont/compcont-std
 
 go 1.23.1
 
@@ -15,5 +15,4 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
 
-replace github.com/go-compcont/compcont/compcont v0.0.0 => ../../compcont
-replace github.com/go-compcont/compcont/compcont-std v0.0.0 => ../compcont-std
+replace github.com/go-compcont/compcont/compcont v0.0.0 => ../compcont

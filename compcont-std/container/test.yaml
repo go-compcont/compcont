@@ -2,4 +2,4 @@
   type: "echo"
   config: "Container test1-from-file"
 
-- { name: "c1", type: "std.finder", config: "../c1" }
+- { name: "c1", refer: "../c1" }
