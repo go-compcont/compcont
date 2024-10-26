@@ -7,26 +7,14 @@ import (
 
 const TypeName compcont.ComponentType = "contrib.zap"
 
-type LoggerProvider interface {
-	GetLogger() *zap.Logger
-}
-
-type getLoggerFunc func() *zap.Logger
-
-func (f getLoggerFunc) GetLogger() *zap.Logger {
-	return f()
-}
-
-var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, LoggerProvider]{
+var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, *zap.Logger]{
 	TypeName: TypeName,
-	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance LoggerProvider, err error) {
+	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance *zap.Logger, err error) {
 		logger, err := New(config)
 		if err != nil {
 			return
 		}
-		instance = getLoggerFunc(func() *zap.Logger {
-			return logger
-		})
+		instance = logger
 		return
 	},
 }
