@@ -36,13 +36,15 @@ func topologicalSort(cfgMap map[ComponentName]set[ComponentName]) ([]ComponentNa
 	// 拓扑排序
 	var result []ComponentName
 	for len(queue) > 0 {
+		// 将入度为0的点出队，并加入result队列中
 		node := queue[0]
 		queue = queue[1:]
 		result = append(result, node)
 
+		// 将已出队的节点对应其他节点的入度都-1
 		for dep := range cfgMap[node] {
 			inDegree[dep]--
-			if inDegree[dep] == 0 {
+			if inDegree[dep] == 0 { // 如果仍然存在入度为0的节点，则继续入队重复上述步骤
 				queue = append(queue, dep)
 			}
 		}
