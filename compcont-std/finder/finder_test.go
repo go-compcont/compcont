@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/go-compcont/compcont/compcont"
-	"github.com/go-compcont/compcont/compcont-std/container"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )
@@ -95,7 +94,7 @@ c2:
 `
 
 func TestFinder(t *testing.T) {
-	cc := container.NewComponentContainer()
+	cc := compcont.NewComponentContainer()
 	compcont.DefaultFactoryRegistry.Register(testComp)
 	compcont.DefaultFactoryRegistry.Register(outputIns)
 	cfg := make(map[compcont.ComponentName]compcont.ComponentConfig)

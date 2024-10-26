@@ -1,9 +1,8 @@
-package container
+package compcont
 
 import (
 	"testing"
 
-	"github.com/go-compcont/compcont/compcont"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,9 +20,9 @@ type ComponentA struct {
 
 func (a *ComponentA) GetConfigA() ConfigA { return a.ConfigA }
 
-var factoryA = &compcont.TypedSimpleComponentFactory[ConfigA, IComponentA]{
+var factoryA = &TypedSimpleComponentFactory[ConfigA, IComponentA]{
 	TypeName: "a",
-	CreateInstanceFunc: func(ctx compcont.Context, config ConfigA) (component IComponentA, err error) {
+	CreateInstanceFunc: func(ctx Context, config ConfigA) (component IComponentA, err error) {
 		component = &ComponentA{
 			ConfigA: config,
 		}
@@ -32,8 +31,8 @@ var factoryA = &compcont.TypedSimpleComponentFactory[ConfigA, IComponentA]{
 }
 
 type ConfigB struct {
-	TestB  string                                              `ccf:"test_b"`
-	InnerA compcont.TypedComponentConfig[ConfigA, IComponentA] `ccf:"inner_a"`
+	TestB  string                                     `ccf:"test_b"`
+	InnerA TypedComponentConfig[ConfigA, IComponentA] `ccf:"inner_a"`
 }
 
 type IComponentB interface {
@@ -49,9 +48,9 @@ func (a *ComponentB) GetConfigB() ConfigB {
 	return a.ConfigB
 }
 
-var factoryB = &compcont.TypedSimpleComponentFactory[ConfigB, IComponentB]{
+var factoryB = &TypedSimpleComponentFactory[ConfigB, IComponentB]{
 	TypeName: "b",
-	CreateInstanceFunc: func(ctx compcont.Context, config ConfigB) (component IComponentB, err error) {
+	CreateInstanceFunc: func(ctx Context, config ConfigB) (component IComponentB, err error) {
 		componentA, err := config.InnerA.LoadComponent(ctx.Container)
 		if err != nil {
 			return
@@ -65,16 +64,16 @@ var factoryB = &compcont.TypedSimpleComponentFactory[ConfigB, IComponentB]{
 }
 
 func Test(t *testing.T) {
-	compcont.DefaultFactoryRegistry.Register(factoryA)
-	compcont.DefaultFactoryRegistry.Register(factoryB)
+	DefaultFactoryRegistry.Register(factoryA)
+	DefaultFactoryRegistry.Register(factoryB)
 
 	registry := NewComponentContainer()
-	err := registry.LoadNamedComponents(map[compcont.ComponentName]compcont.ComponentConfig{
-		"cb": (&compcont.TypedComponentConfig[ConfigB, IComponentB]{
+	err := registry.LoadNamedComponents(map[ComponentName]ComponentConfig{
+		"cb": (&TypedComponentConfig[ConfigB, IComponentB]{
 			Type: "b",
 			Config: ConfigB{
 				TestB: "testb",
-				InnerA: compcont.TypedComponentConfig[ConfigA, IComponentA]{
+				InnerA: TypedComponentConfig[ConfigA, IComponentA]{
 					Type: "a",
 					Config: ConfigA{
 						TestA: "testa",
@@ -85,7 +84,7 @@ func Test(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	componentB, err := compcont.GetComponent[IComponentB](registry, "cb")
+	componentB, err := GetComponent[IComponentB](registry, "cb")
 	assert.NoError(t, err)
 
 	assert.Equal(t, "testa", componentB.Instance.GetConfigB().InnerA.Config.TestA)

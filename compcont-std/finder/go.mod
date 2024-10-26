@@ -4,7 +4,6 @@ go 1.23.1
 
 require (
 	github.com/go-compcont/compcont/compcont v0.0.0
-	github.com/go-compcont/compcont/compcont-std/container v0.0.0
 	github.com/stretchr/testify v1.9.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -17,5 +16,3 @@ require (
 )
 
 replace github.com/go-compcont/compcont/compcont v0.0.0 => ../../compcont
-
-replace github.com/go-compcont/compcont/compcont-std/container v0.0.0 => ../container

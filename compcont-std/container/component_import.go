@@ -22,10 +22,10 @@ func MustRegisterContainerImport(r compcont.IFactoryRegistry) {
 	r.Register(&compcont.TypedSimpleComponentFactory[ContainerImportConfig, compcont.IComponentContainer]{
 		TypeName: ContainerImportType,
 		CreateInstanceFunc: func(ctx compcont.Context, config ContainerImportConfig) (instance compcont.IComponentContainer, err error) {
-			instance = NewComponentContainer(
-				WithFactoryRegistry(ctx.Container.FactoryRegistry()),
-				WithParentContainer(ctx.Container),
-				WithSelfNodeName(ctx.Name),
+			instance = compcont.NewComponentContainer(
+				compcont.WithFactoryRegistry(ctx.Container.FactoryRegistry()),
+				compcont.WithParentContainer(ctx.Container),
+				compcont.WithSelfNodeName(ctx.Name),
 			)
 			var bs []byte
 			bs, err = os.ReadFile(config.FromFile)

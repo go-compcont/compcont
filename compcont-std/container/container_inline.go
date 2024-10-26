@@ -12,10 +12,10 @@ func MustRegisterContainerInline(r compcont.IFactoryRegistry) {
 	r.Register(&compcont.TypedSimpleComponentFactory[ContainerInlineConfig, compcont.IComponentContainer]{
 		TypeName: InlineContainerType,
 		CreateInstanceFunc: func(ctx compcont.Context, config ContainerInlineConfig) (instance compcont.IComponentContainer, err error) {
-			instance = NewComponentContainer(
-				WithParentContainer(ctx.Container),
-				WithFactoryRegistry(ctx.Container.FactoryRegistry()),
-				WithSelfNodeName(ctx.Name),
+			instance = compcont.NewComponentContainer(
+				compcont.WithParentContainer(ctx.Container),
+				compcont.WithFactoryRegistry(ctx.Container.FactoryRegistry()),
+				compcont.WithSelfNodeName(ctx.Name),
 			)
 			err = instance.LoadNamedComponents(config.Components)
 			return
