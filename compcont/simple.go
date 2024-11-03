@@ -111,7 +111,7 @@ func (f TypedDestroyInstanceFunc[Component]) ToAny() DestroyInstanceFunc {
 
 type TypedComponentConfig[Config any, Component any] struct {
 	Name   ComponentName   `json:"name" yaml:"name"`
-	Type   ComponentType   `json:"type" yaml:"type"`     // 组件类型
+	Type   ComponentTypeID `json:"type" yaml:"type"`     // 组件类型
 	Refer  string          `json:"refer" yaml:"refer"`   // 来自其他组件的引用
 	Deps   []ComponentName `json:"deps" yaml:"deps"`     // 构造该组件需要依赖的其他组件名称
 	Config Config          `json:"config" yaml:"config"` // 组件的自身配置
@@ -132,13 +132,13 @@ func (c TypedComponentConfig[Config, Component]) LoadComponent(container ICompon
 }
 
 type TypedSimpleComponentFactory[Config any, Component any] struct {
-	TypeName            ComponentType
+	TypeID              ComponentTypeID
 	CreateInstanceFunc  TypedCreateInstanceFunc[Config, Component]
 	DestroyInstanceFunc TypedDestroyInstanceFunc[Component]
 }
 
-func (s *TypedSimpleComponentFactory[Config, Component]) Type() ComponentType {
-	return s.TypeName
+func (s *TypedSimpleComponentFactory[Config, Component]) Type() ComponentTypeID {
+	return s.TypeID
 }
 
 func (s *TypedSimpleComponentFactory[Config, Component]) CreateInstance(ctx Context, config any) (instance any, err error) {

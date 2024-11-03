@@ -44,7 +44,7 @@ func (j *jwtAutherImpl) Generate(payload any) (token string, err error) {
 	return
 }
 
-const TypeName compcont.ComponentType = "contrib.jwt"
+const TypeID compcont.ComponentTypeID = "contrib.jwt"
 
 func New(cfg Config) (j JWTAuther, err error) {
 	j = &jwtAutherImpl{
@@ -54,7 +54,7 @@ func New(cfg Config) (j JWTAuther, err error) {
 }
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, JWTAuther]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance JWTAuther, err error) {
 		return New(config)
 	},

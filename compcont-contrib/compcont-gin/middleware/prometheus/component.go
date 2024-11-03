@@ -125,10 +125,10 @@ func New(cc compcont.IComponentContainer, cfg Config) (c gin.HandlerFunc, err er
 	return
 }
 
-const TypeName compcont.ComponentType = "contrib.gin-middleware-prometheus"
+const TypeID compcont.ComponentTypeID = "contrib.gin-middleware-prometheus"
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, gin.HandlerFunc]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance gin.HandlerFunc, err error) {
 		return New(ctx.Container, config)
 	},

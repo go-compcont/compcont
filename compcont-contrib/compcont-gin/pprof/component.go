@@ -11,7 +11,7 @@ type Config struct {
 	RoutePrefix string                                          `ccf:"route_prefix"`
 }
 
-const TypeName compcont.ComponentType = "contrib.gin-pprof"
+const TypeID compcont.ComponentTypeID = "contrib.gin-pprof"
 
 func New(cc compcont.IComponentContainer, cfg Config) (err error) {
 	g, err := cfg.Gin.LoadComponent(cc)
@@ -27,7 +27,7 @@ func New(cc compcont.IComponentContainer, cfg Config) (err error) {
 }
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, any]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance any, err error) {
 		err = New(ctx.Container, config)
 		return

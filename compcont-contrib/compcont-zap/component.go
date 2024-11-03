@@ -5,10 +5,10 @@ import (
 	"go.uber.org/zap"
 )
 
-const TypeName compcont.ComponentType = "contrib.zap"
+const TypeID compcont.ComponentTypeID = "contrib.zap"
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, *zap.Logger]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance *zap.Logger, err error) {
 		logger, err := New(config)
 		if err != nil {

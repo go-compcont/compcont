@@ -33,10 +33,10 @@ func New(cc compcont.IComponentContainer, cfg Config) (c Component, err error) {
 	return
 }
 
-const TypeName compcont.ComponentType = "contrib.gin"
+const TypeID compcont.ComponentTypeID = "contrib.gin"
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, Component]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance Component, err error) {
 		return New(ctx.Container, config)
 	},

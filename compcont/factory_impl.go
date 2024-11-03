@@ -6,13 +6,13 @@ import (
 )
 
 type FactoryRegistry struct {
-	factories map[ComponentType]IComponentFactory
+	factories map[ComponentTypeID]IComponentFactory
 	mu        sync.RWMutex
 }
 
 func NewFactoryRegistry() IFactoryRegistry {
 	return &FactoryRegistry{
-		factories: make(map[ComponentType]IComponentFactory),
+		factories: make(map[ComponentTypeID]IComponentFactory),
 	}
 }
 
@@ -24,7 +24,7 @@ func (c *FactoryRegistry) Register(f IComponentFactory) {
 }
 
 // RegisteredComponentTypes implements IComponentFactoryRegistry.
-func (c *FactoryRegistry) RegisteredComponentTypes() (types []ComponentType) {
+func (c *FactoryRegistry) RegisteredComponentTypes() (types []ComponentTypeID) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	for t := range c.factories {
@@ -33,7 +33,7 @@ func (c *FactoryRegistry) RegisteredComponentTypes() (types []ComponentType) {
 	return
 }
 
-func (c *FactoryRegistry) GetFactory(t ComponentType) (f IComponentFactory, err error) {
+func (c *FactoryRegistry) GetFactory(t ComponentTypeID) (f IComponentFactory, err error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	var ok bool

@@ -5,12 +5,12 @@ import (
 	"github.com/go-compcont/compcont/compcont"
 )
 
-const TypeName compcont.ComponentType = "contrib.gin-middleware-recovery"
+const TypeID compcont.ComponentTypeID = "contrib.gin-middleware-recovery"
 
 type Config struct{}
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, gin.HandlerFunc]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance gin.HandlerFunc, err error) {
 		instance = gin.Recovery()
 		return

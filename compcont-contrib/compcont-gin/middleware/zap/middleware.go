@@ -115,10 +115,10 @@ func New(cc compcont.IComponentContainer, cfg Config) (c gin.HandlerFunc, err er
 	return
 }
 
-const TypeName compcont.ComponentType = "base.gin-middleware-zap"
+const TypeID compcont.ComponentTypeID = "base.gin-middleware-zap"
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, gin.HandlerFunc]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance gin.HandlerFunc, err error) {
 		return New(ctx.Container, config)
 	},

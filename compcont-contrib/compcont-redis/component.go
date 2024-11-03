@@ -5,7 +5,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const TypeName compcont.ComponentType = "contrib.redis"
+const TypeID compcont.ComponentTypeID = "contrib.redis"
 
 type Config struct {
 	URL string `ccf:"url"`
@@ -42,7 +42,7 @@ func New(cfg Config) (comp Component, err error) {
 }
 
 var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[Config, Component]{
-	TypeName: TypeName,
+	TypeID: TypeID,
 	CreateInstanceFunc: func(ctx compcont.Context, config Config) (instance Component, err error) {
 		return New(config)
 	},

@@ -21,7 +21,7 @@ type ComponentA struct {
 func (a *ComponentA) GetConfigA() ConfigA { return a.ConfigA }
 
 var factoryA = &TypedSimpleComponentFactory[ConfigA, IComponentA]{
-	TypeName: "a",
+	TypeID: "a",
 	CreateInstanceFunc: func(ctx Context, config ConfigA) (component IComponentA, err error) {
 		component = &ComponentA{
 			ConfigA: config,
@@ -49,7 +49,7 @@ func (a *ComponentB) GetConfigB() ConfigB {
 }
 
 var factoryB = &TypedSimpleComponentFactory[ConfigB, IComponentB]{
-	TypeName: "b",
+	TypeID: "b",
 	CreateInstanceFunc: func(ctx Context, config ConfigB) (component IComponentB, err error) {
 		componentA, err := config.InnerA.LoadComponent(ctx.Container)
 		if err != nil {

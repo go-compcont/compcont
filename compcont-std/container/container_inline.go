@@ -2,7 +2,7 @@ package container
 
 import "github.com/go-compcont/compcont/compcont"
 
-const InlineContainerType compcont.ComponentType = "std.container-inline"
+const InlineContainerType compcont.ComponentTypeID = "std.container-inline"
 
 type ContainerInlineConfig struct {
 	Components []compcont.ComponentConfig `ccf:"components"`
@@ -10,7 +10,7 @@ type ContainerInlineConfig struct {
 
 func MustRegisterContainerInline(r compcont.IFactoryRegistry) {
 	r.Register(&compcont.TypedSimpleComponentFactory[ContainerInlineConfig, compcont.IComponentContainer]{
-		TypeName: InlineContainerType,
+		TypeID: InlineContainerType,
 		CreateInstanceFunc: func(ctx compcont.Context, config ContainerInlineConfig) (instance compcont.IComponentContainer, err error) {
 			instance = compcont.NewComponentContainer(
 				compcont.WithParentContainer(ctx.Container),
