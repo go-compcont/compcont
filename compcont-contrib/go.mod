@@ -11,7 +11,6 @@ require (
 	github.com/prometheus/client_golang v1.20.5
 	github.com/redis/go-redis/v9 v9.7.0
 	go.uber.org/zap v1.27.0
-	go.uber.org/zap/exp v0.3.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
