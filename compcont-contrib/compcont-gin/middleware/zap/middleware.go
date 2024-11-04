@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-compcont/compcont/compcont"
+	"github.com/go-compcont/compcont/compcont-std/compcontzap"
 	"go.uber.org/zap"
 )
 
@@ -67,7 +68,7 @@ func New(cc compcont.IComponentContainer, cfg Config) (c gin.HandlerFunc, err er
 
 		// app日志添加一个RequestID即可
 		applicationLogger := applicationLogger.With(zap.String("request_id", reqid))
-		WithLogger(ctx.Request, applicationLogger)
+		compcontzap.WithLogger(ctx.Request, applicationLogger)
 
 		// 请求日志后续处理
 		requestLogger := requestLogger.With(zap.String("request_id", reqid))

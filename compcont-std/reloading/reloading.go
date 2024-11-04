@@ -48,22 +48,6 @@ type IReloading interface {
 	Close() error
 }
 
-const Type compcont.ComponentTypeID = "base.reloading"
-
-func Build(cc compcont.IComponentContainer, cfg Config) (comp IReloading, err error) {
-	var restyClient *resty.Client
-	if cfg.Resty != nil {
-		restyClientComp, err1 := cfg.Resty.LoadComponent(cc)
-		if err1 != nil {
-			err = err1
-			return
-		}
-		restyClient = restyClientComp.Instance
-	}
-	comp = NewReloading(cfg, restyClient)
-	return
-}
-
 type Reloading struct {
 	Config
 	ticker    *time.Ticker
