@@ -135,7 +135,7 @@ var factory compcont.IComponentFactory = &compcont.TypedSimpleComponentFactory[C
 }
 
 func MustRegister(registry compcont.IFactoryRegistry) {
-	registry.Register(factory)
+	compcont.MustRegister(registry, factory)
 }
 
 func init() {
